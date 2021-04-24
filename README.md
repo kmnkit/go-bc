@@ -14,7 +14,7 @@
 - [x] 트랜잭션 추가
 - [x] 해(Nonce) 구하기
 - [x] Mining
-- [ ] Transaction 합계 구하기
+- [x] Transaction 합계 구하기
 
 ## 월렛 작성
 
