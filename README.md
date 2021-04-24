@@ -12,8 +12,7 @@
 - [x] 블록체인 구조체 작성
 - [x] 블록의 해쉬 구하기
 - [x] 트랜잭션 추가
-- [ ] Proof of Work, 콘센서스 알고리즘, 해(Nonce)에 대해
-- [ ] 해(Nonce) 구하기
+- [x] 해(Nonce) 구하기
 - [ ] Mining
 - [ ] Transaction 합계 구하기
 

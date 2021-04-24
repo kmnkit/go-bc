@@ -9,11 +9,13 @@ import (
 	"time"
 )
 
+const MINING_DIFFICULTY = 3
+
 // Block 블록 기본 구조체
 type Block struct {
+	timestamp    int64
 	nonce        int
 	previousHash [32]byte
-	timestamp    int64
 	transactions []*Transaction
 }
 
@@ -110,6 +112,38 @@ func (bc *Blockchain) AddTransaction(sender string, recipient string, value floa
 	return
 }
 
+// CopyTransactionPool 트랜잭션 풀을 복사해둠
+func (bc *Blockchain) CopyTransactionPool() []*Transaction {
+	transactions := make([]*Transaction, 0)
+	for _, t := range bc.transactionPool {
+		transactions = append(transactions, NewTransaction(
+			t.senderBlockchainAddress,
+			t.recipientBlockchainAddress,
+			t.value,
+		))
+	}
+	return transactions
+}
+
+// ValidProof 계산 결과 검증
+func (bc *Blockchain) ValidProof(nonce int, previousHash [32]byte, transactions []*Transaction, difficulty int) bool {
+	zeros := strings.Repeat("0", difficulty)
+	guessBlock := Block{0, nonce, previousHash, transactions}
+	guessHashStr := fmt.Sprintf("%x", guessBlock.Hash())
+	return guessHashStr[:difficulty] == zeros
+}
+
+// ProofOfWork 해를 구함
+func (bc *Blockchain) ProofOfWork() int {
+	transactions := bc.CopyTransactionPool()
+	previousHash := bc.LastBlock().Hash()
+	nonce := 0
+	for !bc.ValidProof(nonce, previousHash, transactions, MINING_DIFFICULTY) {
+		nonce += 1
+	}
+	return nonce
+}
+
 // NewTransaction 새 트랜잭션 작성
 func NewTransaction(sender string, recipient string, value float32) *Transaction {
 	return &Transaction{sender, recipient, value}
@@ -144,14 +178,16 @@ func main() {
 	blockChain.Print()
 
 	blockChain.AddTransaction("A", "B", 1.0)
+	nonce := blockChain.ProofOfWork()
 	previousHash := blockChain.LastBlock().Hash()
-	blockChain.CreateBlock(5, previousHash)
+	blockChain.CreateBlock(nonce, previousHash)
 	blockChain.Print()
 
 	blockChain.AddTransaction("C", "D", 2.0)
 	blockChain.AddTransaction("E", "F", 3.0)
+	nonce = blockChain.ProofOfWork()
 	previousHash = blockChain.LastBlock().Hash()
-	blockChain.CreateBlock(2, previousHash)
+	blockChain.CreateBlock(nonce, previousHash)
 	blockChain.Print()
 	return
 }
