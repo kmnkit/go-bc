@@ -14,26 +14,27 @@ type Block struct {
 	nonce        int
 	previousHash [32]byte
 	timestamp    int64
-	transactions []string
+	transactions []*Transaction
 }
 
 // NewBlock 새 블록 생성
-func NewBlock(nonce int, previousHash [32]byte) *Block {
+func NewBlock(nonce int, previousHash [32]byte, transactions []*Transaction) *Block {
 	// Block의 address를 반환함
 	b := new(Block)
 	b.timestamp = time.Now().UnixNano()
 	b.nonce = nonce
 	b.previousHash = previousHash
+	b.transactions = transactions
 	return b
 }
 
 // MarshalJSON JSON 형태 지정
 func (b *Block) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
-		Timestamp    int64    `json:"timestamp"`
-		Nonce        int      `json:"nonce"`
-		PreviousHash [32]byte `json:"previous_hash"`
-		Transactions []string `json:"transactions"`
+		Timestamp    int64          `json:"timestamp"`
+		Nonce        int            `json:"nonce"`
+		PreviousHash [32]byte       `json:"previous_hash"`
+		Transactions []*Transaction `json:"transactions"`
 	}{
 		Timestamp:    b.timestamp,
 		Nonce:        b.nonce,
@@ -47,7 +48,9 @@ func (b *Block) Print() {
 	fmt.Printf("timestamp      %d\n", b.timestamp)
 	fmt.Printf("nonce          %d\n", b.nonce)
 	fmt.Printf("previousHash   %x\n", b.previousHash)
-	fmt.Printf("transactions   %s\n", b.transactions)
+	for _, t := range b.transactions {
+		t.Print()
+	}
 }
 
 func (b *Block) Hash() [32]byte {
@@ -57,7 +60,7 @@ func (b *Block) Hash() [32]byte {
 
 // Blockchain 블록체인 구조체
 type Blockchain struct {
-	transactionPool []string
+	transactionPool []*Transaction
 	chain           []*Block // 이 체인에 블록을 추가해나감.
 }
 
@@ -72,8 +75,9 @@ func NewBlockChain() *Blockchain {
 
 // CreateBlock 블록을 하나 추가하여 블록체인에 그 블록을 추가함
 func (bc *Blockchain) CreateBlock(nonce int, previousHash [32]byte) *Block {
-	b := NewBlock(nonce, previousHash) // 블록 작성
-	bc.chain = append(bc.chain, b)     // bc의 체인에 위의 블록을 추가
+	b := NewBlock(nonce, previousHash, bc.transactionPool) // 블록 작성
+	bc.chain = append(bc.chain, b)                         // bc의 체인에 위의 블록을 추가
+	bc.transactionPool = []*Transaction{}
 	return b
 }
 
@@ -92,6 +96,45 @@ func (bc *Blockchain) Print() {
 	return
 }
 
+// Transaction 트랜잭셩 구조체
+type Transaction struct {
+	senderBlockchainAddress    string  // 보내는이 Address
+	recipientBlockchainAddress string  // 받는이 Address
+	value                      float32 // 보내는 값
+}
+
+// AddTransaction 블록의 transactionPool에 새 트랜잭션을 추가함
+func (bc *Blockchain) AddTransaction(sender string, recipient string, value float32) {
+	t := NewTransaction(sender, recipient, value)
+	bc.transactionPool = append(bc.transactionPool, t)
+	return
+}
+
+// NewTransaction 새 트랜잭션 작성
+func NewTransaction(sender string, recipient string, value float32) *Transaction {
+	return &Transaction{sender, recipient, value}
+}
+
+func (t *Transaction) Print() {
+	fmt.Printf("%s\n", strings.Repeat("-", 40))
+	fmt.Printf(" sender_blockchain_address       %s\n", t.senderBlockchainAddress)
+	fmt.Printf(" recipient_blockchain_address    %s\n", t.recipientBlockchainAddress)
+	fmt.Printf(" value                           %.1f\n", t.value)
+}
+
+// MarshalJSON Transaction 내용을 Json Marshal 함.
+func (t *Transaction) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Sender    string  `json:"sender_blockchain_address"`
+		Recipient string  `json:"recipient_blockchain_address"`
+		Value     float32 `json:"value"`
+	}{
+		Sender:    t.senderBlockchainAddress,
+		Recipient: t.recipientBlockchainAddress,
+		Value:     t.value,
+	})
+}
+
 func init() {
 	log.SetPrefix("BlockChain: ")
 }
@@ -100,10 +143,13 @@ func main() {
 	blockChain := NewBlockChain()
 	blockChain.Print()
 
+	blockChain.AddTransaction("A", "B", 1.0)
 	previousHash := blockChain.LastBlock().Hash()
 	blockChain.CreateBlock(5, previousHash)
 	blockChain.Print()
 
+	blockChain.AddTransaction("C", "D", 2.0)
+	blockChain.AddTransaction("E", "F", 3.0)
 	previousHash = blockChain.LastBlock().Hash()
 	blockChain.CreateBlock(2, previousHash)
 	blockChain.Print()
