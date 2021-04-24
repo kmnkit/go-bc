@@ -9,7 +9,11 @@ import (
 	"time"
 )
 
-const MINING_DIFFICULTY = 3
+const (
+	MINING_DIFFICULTY = 3
+	MINING_SENDER     = "THE BLOCKCHAIN"
+	MINING_REWARD     = 1.0
+)
 
 // Block 블록 기본 구조체
 type Block struct {
@@ -62,15 +66,17 @@ func (b *Block) Hash() [32]byte {
 
 // Blockchain 블록체인 구조체
 type Blockchain struct {
-	transactionPool []*Transaction
-	chain           []*Block // 이 체인에 블록을 추가해나감.
+	transactionPool   []*Transaction
+	chain             []*Block // 이 체인에 블록을 추가해나감.
+	blockchainAddress string
 }
 
 // NewBlockChain 새 블록체인 작성
-func NewBlockChain() *Blockchain {
+func NewBlockChain(blockchainAddress string) *Blockchain {
 	// 새 블록체인을 작성한여 넘겨준다.
 	b := &Block{}
 	bc := new(Blockchain)
+	bc.blockchainAddress = blockchainAddress
 	bc.CreateBlock(0, b.Hash())
 	return bc
 }
@@ -96,6 +102,15 @@ func (bc *Blockchain) Print() {
 	}
 	fmt.Printf("%s\n", strings.Repeat("*", 60))
 	return
+}
+
+func (bc *Blockchain) Mining() bool {
+	bc.AddTransaction(MINING_SENDER, bc.blockchainAddress, MINING_REWARD)
+	nonce := bc.ProofOfWork()
+	previousHash := bc.LastBlock().Hash()
+	bc.CreateBlock(nonce, previousHash)
+	log.Println("action=mining, status=success")
+	return true
 }
 
 // Transaction 트랜잭셩 구조체
@@ -174,20 +189,18 @@ func init() {
 }
 
 func main() {
-	blockChain := NewBlockChain()
+	myBlockchainAddress := "my_blockchain_address"
+
+	blockChain := NewBlockChain(myBlockchainAddress)
 	blockChain.Print()
 
 	blockChain.AddTransaction("A", "B", 1.0)
-	nonce := blockChain.ProofOfWork()
-	previousHash := blockChain.LastBlock().Hash()
-	blockChain.CreateBlock(nonce, previousHash)
+	blockChain.Mining()
 	blockChain.Print()
 
 	blockChain.AddTransaction("C", "D", 2.0)
-	blockChain.AddTransaction("E", "F", 3.0)
-	nonce = blockChain.ProofOfWork()
-	previousHash = blockChain.LastBlock().Hash()
-	blockChain.CreateBlock(nonce, previousHash)
+	blockChain.AddTransaction("X", "Y", 3.0)
+	blockChain.Mining()
 	blockChain.Print()
 	return
 }
