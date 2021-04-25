@@ -20,9 +20,7 @@
                 }
             })
             $('#send_money_button').click(function () {
-                console.info('Hello');
                 let confirm_text = 'Are you sure to send?';
-                console.info(confirm_text);
                 let confirm_result = confirm(confirm_text)
                 if(confirm_result !== true){
                     alert('canceled')
@@ -40,16 +38,10 @@
                     type:'POST',
                     contentType:'application/json',
                     data:JSON.stringify(transaction_data),
-                    success: function(response){
-                        console.info(response);
-                        if ($.parseJSON(response).message == 'fail'){
-                            alert("failed")
-                            return
-                        }
+                    success: function(response){                        
                         alert('Send Success');
                     },
                     error:function(error){
-                        console.info(error);
                         alert('Send failed');
                     }
                 })

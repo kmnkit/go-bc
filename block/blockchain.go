@@ -42,12 +42,12 @@ func (b *Block) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Timestamp    int64          `json:"timestamp"`
 		Nonce        int            `json:"nonce"`
-		PreviousHash [32]byte       `json:"previous_hash"`
+		PreviousHash string         `json:"previous_hash"`
 		Transactions []*Transaction `json:"transactions"`
 	}{
 		Timestamp:    b.timestamp,
 		Nonce:        b.nonce,
-		PreviousHash: b.previousHash,
+		PreviousHash: fmt.Sprintf("%x", b.previousHash),
 		Transactions: b.transactions,
 	})
 }
@@ -72,16 +72,32 @@ type Blockchain struct {
 	transactionPool   []*Transaction
 	chain             []*Block // 이 체인에 블록을 추가해나감.
 	blockchainAddress string
+	port              uint16
 }
 
 // NewBlockChain 새 블록체인 작성
-func NewBlockChain(blockchainAddress string) *Blockchain {
+func NewBlockChain(blockchainAddress string, port uint16) *Blockchain {
 	// 새 블록체인을 작성한여 넘겨준다.
 	b := &Block{}
 	bc := new(Blockchain)
 	bc.blockchainAddress = blockchainAddress
 	bc.CreateBlock(0, b.Hash())
+	bc.port = port
 	return bc
+}
+
+// TransactionPool 블록체인의 트랜잭션 풀 취득
+func (bc *Blockchain) TransactionPool() []*Transaction {
+	return bc.transactionPool
+}
+
+// MarshalJSON
+func (bc *Blockchain) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Blocks []*Block `json:"chains"`
+	}{
+		Blocks: bc.chain,
+	})
 }
 
 // CreateBlock 블록을 하나 추가하여 블록체인에 그 블록을 추가함
@@ -139,6 +155,15 @@ type Transaction struct {
 	senderBlockchainAddress    string  // 보내는이 Address
 	recipientBlockchainAddress string  // 받는이 Address
 	value                      float32 // 보내는 값
+}
+
+// CreateTransaction Transaction 작성
+func (bc *Blockchain) CreateTransaction(sender string, recipient string, value float32,
+	senderPublicKey *ecdsa.PublicKey, s *utils.Signature) bool {
+	isTransacted := bc.AddTransaction(sender, recipient, value, senderPublicKey, s)
+	// TODO: Sync
+
+	return isTransacted
 }
 
 // AddTransaction 블록의 transactionPool에 새 트랜잭션을 추가함
@@ -227,10 +252,21 @@ func (t *Transaction) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func init() {
-	log.SetPrefix("BlockChain: ")
+type TransactionRequest struct {
+	SenderBlockchainAddress    *string  `json:"sender_blockchain_address"`
+	RecipientBlockchainAddress *string  `json:"recipient_blockchain_address"`
+	SenderPublicKey            *string  `json:"sender_public_key"`
+	Value                      *float32 `json:"value"`
+	Signature                  *string  `json:"signature"`
 }
 
-func main() {
-	return
+func (tr *TransactionRequest) Validate() bool {
+	if tr.SenderBlockchainAddress == nil ||
+		tr.RecipientBlockchainAddress == nil ||
+		tr.SenderPublicKey == nil ||
+		tr.Value == nil ||
+		tr.Signature == nil {
+		return false
+	}
+	return true
 }

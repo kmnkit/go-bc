@@ -26,16 +26,16 @@
 
 ## 블록체인 서버 API
 
-- [ ] 웹서버 구동
-- [ ] 블록체인을 취득하는 API 작성
-- [ ] 월렛의 UI서버 구동
-- [ ] 월렛의 UI 작성
-- [ ] 월렛 작성
-- [ ] UI에서 Transaction 송신
-- [ ] Json Decode
-- [ ] 문자열에서 ECDSA관련 데이터를 구조체로 변환하기
-- [ ] HTTP Client로 데이터 송신
-- [ ] Transaction API 작성
+- [x] 웹서버 구동
+- [x] 블록체인을 취득하는 API 작성
+- [x] 월렛의 UI서버 구동
+- [x] 월렛의 UI 작성
+- [x] 월렛 작성
+- [x] UI에서 Transaction 송신
+- [x] Json Decode
+- [x] 문자열에서 ECDSA관련 데이터를 구조체로 변환하기
+- [x] HTTP Client로 데이터 송신
+- [x] Transaction API 작성
 - [ ] Mining API 작성
 - [ ] 자동 Mining 실행
 - [ ] 가상화폐의 합계를 반환하는 Blockchain 서버 API 작성
@@ -47,7 +47,6 @@
 - [ ] 다른 Blockchain Node를 탐색하기
 - [ ] Blockchain Node의 자동등록
 - [ ] Transaction 동기화
-- [ ] 콘센서스란
 - [ ] Blockchain 검증
 - [ ] 가장 긴 것을 채용하는 Resolve Conflict
 - [ ] 콘센서스 API 작성
