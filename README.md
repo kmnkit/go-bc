@@ -21,7 +21,7 @@
 - [x] 비밀키와 공개키, ECDSA
 - [x] 월렛 작성
 - [x] 블록체인 어드레스 작성
-- [ ] Transaction 서명
+- [x] Transaction 서명
 - [ ] Transaction 검증
 
 ## 블록체인 서버 API
