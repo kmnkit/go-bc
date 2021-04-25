@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"html/template"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/kmnkit/go-bc/block"
 	"github.com/kmnkit/go-bc/utils"
 	"github.com/kmnkit/go-bc/wallet"
 )
@@ -35,7 +37,8 @@ func (ws *WalletServer) Gateway() string {
 func (ws *WalletServer) Index(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
-		t, _ := template.ParseFiles(path.Join(tempDir, "index.html"))
+		t, err := template.ParseFiles(path.Join(tempDir, "index.html"))
+		utils.CheckErr(err)
 		t.Execute(w, "")
 	default:
 		log.Printf("ERROR: Invalid HTTP Method")
@@ -47,7 +50,8 @@ func (ws *WalletServer) Wallet(w http.ResponseWriter, req *http.Request) {
 	case http.MethodPost:
 		w.Header().Add("Content-Type", "application/json")
 		myWallet := wallet.NewWallet()
-		m, _ := myWallet.MarshalJSON()
+		m, err := myWallet.MarshalJSON()
+		utils.CheckErr(err)
 		io.WriteString(w, string(m[:]))
 	default:
 		w.WriteHeader(http.StatusBadRequest)
@@ -82,9 +86,32 @@ func (ws *WalletServer) CreateTransaction(w http.ResponseWriter, req *http.Reque
 		value32 := float32(value)
 
 		w.Header().Add("Content-Type", "application/json")
+
+		transaction := wallet.NewTransaction(privateKey, publicKey, *t.SenderBlockchainAddress, *t.RecipientBlockchainAddress, value32)
+		signature := transaction.GenerateSignature()
+		signatureStr := signature.String()
+
+		bt := &block.TransactionRequest{
+			t.SenderBlockchainAddress,
+			t.RecipientBlockchainAddress,
+			t.SenderPublicKey,
+			&value32, &signatureStr,
+		}
+		m, err := json.Marshal(bt)
+		utils.CheckErr(err)
+		buf := bytes.NewBuffer(m)
+
+		resp, err := http.Post(ws.Gateway()+"/transactions", "application/json", buf)
+		utils.CheckErr(err)
+		if resp.StatusCode == 201 {
+			io.WriteString(w, string(utils.JsonStatus("success")))
+			return
+		}
+		io.WriteString(w, string(utils.JsonStatus("fail")))
+
 	default:
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println("HERROR: Invalid HTTP Method")
+		log.Println("ERROR: Invalid HTTP Method")
 	}
 }
 
