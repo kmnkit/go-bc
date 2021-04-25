@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-const tempDir = "wallet_server/templates"
+const tempDir = "templates"
 
 type WalletServer struct {
 	port    uint16
