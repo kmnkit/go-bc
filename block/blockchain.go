@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/kmnkit/go-bc/utils"
@@ -16,6 +17,7 @@ const (
 	MINING_DIFFICULTY = 3
 	MINING_SENDER     = "THE BLOCKCHAIN"
 	MINING_REWARD     = 1.0
+	MINING_TIME_SEC   = 20
 )
 
 // Block 블록 기본 구조체
@@ -73,6 +75,7 @@ type Blockchain struct {
 	chain             []*Block // 이 체인에 블록을 추가해나감.
 	blockchainAddress string
 	port              uint16
+	mux               sync.Mutex
 }
 
 // NewBlockChain 새 블록체인 작성
@@ -125,12 +128,24 @@ func (bc *Blockchain) Print() {
 
 // Mining 채굴 작업
 func (bc *Blockchain) Mining() bool {
+	bc.mux.Lock()
+	defer bc.mux.Unlock()
+
+	if len(bc.transactionPool) == 0 {
+		return false
+	}
+
 	bc.AddTransaction(MINING_SENDER, bc.blockchainAddress, MINING_REWARD, nil, nil)
 	nonce := bc.ProofOfWork()
 	previousHash := bc.LastBlock().Hash()
 	bc.CreateBlock(nonce, previousHash)
 	log.Println("action=mining, status=success")
 	return true
+}
+
+func (bc *Blockchain) StartMining() {
+	bc.Mining()
+	_ = time.AfterFunc(time.Second*MINING_TIME_SEC, bc.StartMining)
 }
 
 // CalculateTotalAmount 가상통화 총량을 계산함
