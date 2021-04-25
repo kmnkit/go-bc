@@ -36,7 +36,7 @@
 - [x] 문자열에서 ECDSA관련 데이터를 구조체로 변환하기
 - [x] HTTP Client로 데이터 송신
 - [x] Transaction API 작성
-- [ ] Mining API 작성
+- [x] Mining API 작성
 - [ ] 자동 Mining 실행
 - [ ] 가상화폐의 합계를 반환하는 Blockchain 서버 API 작성
 - [ ] 가상화폐의 합계를 반환하는 월렛 서버의 API 작성
